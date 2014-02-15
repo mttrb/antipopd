@@ -12,8 +12,8 @@
 /*
 
 export MACOSX_DEPLOYMENT_TARGET=10.4
-gcc-4.0 -framework CoreFoundation -framework Foundation -framework SystemConfiguration 
-  -framework AppKit -arch i386 -arch ppc -o antipopd antipopd.m
+clang -framework CoreFoundation -framework Foundation -framework SystemConfiguration 
+  -framework AppKit -arch i386 -arch x86_64 -o antipopd antipopd.m
 
 */
 
@@ -27,10 +27,10 @@ gcc-4.0 -framework CoreFoundation -framework Foundation -framework SystemConfigu
 #define ANTIPOPD_CONFIG	"/usr/local/share/antipop/ac_only"
 #define BATTERY_STATE	CFSTR("State:/IOKit/PowerSources/InternalBattery-0")
 #define POWER_SOURCE	CFSTR("Power Source State")
-#define	INTERVAL		10 // seconds
+#define	INTERVAL	10 // seconds
 
 static BOOL onACPower = YES;
-static BOOL	runOnACOnly = YES;
+static BOOL runOnACOnly = YES;
 
 
 void banner() {
