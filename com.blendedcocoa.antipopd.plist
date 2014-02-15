@@ -7,7 +7,7 @@
 	<key>KeepAlive</key>
 	<true/>
 	<key>Label</key>
-	<string>com.blendedcocoa.antipop</string>
+	<string>com.blendedcocoa.antipopd</string>
 	<key>OnDemand</key>
 	<false/>
 	<key>Program</key>
