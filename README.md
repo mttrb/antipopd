@@ -20,3 +20,11 @@ in resource overheads.  The bash script executes two expensive processes
 This version of `antipopd` is released, like Robert Tomsick's version, under
 a Creative Commons Attribution Noncommercial Share Alike License 3.0,
 http://creativecommons.org/licenses/by-nc-sa/3.0/us
+
+
+Build
+===
+
+`antipopd` can be built in a terminal using the following command:
+
+    clang -framework CoreFoundation -framework Foundation -framework SystemConfiguration -framework AppKit -arch i386 -arch x86_64 -o antipopd antipopd.m
