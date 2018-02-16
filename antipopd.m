@@ -61,7 +61,7 @@ void banner() {
 // Timer callback that actually speaks the space
 void speak(CFRunLoopTimerRef timer, void *info) {
 	if (onACPower) {
-		[(NSSpeechSynthesizer *)info startSpeakingString:@"space"];
+		[(NSSpeechSynthesizer *)info startSpeakingString:@" "];
 	}
 }
 
