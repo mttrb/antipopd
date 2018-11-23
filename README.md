@@ -6,7 +6,7 @@ Copyright (c) Matthew Robinson 2010, 2018
 Email: matt@blendedcocoa.com
 
 `antipopd` is a drop in replacement for Robert Tomsick's `antipopd` 1.0.2 bash
-script which is available at http://www.tomsick.net/projects/antipop
+script which is available at http://www.tomsick.net/projects/antipop.html
 
 `antipopd` is a utility program which keeps the audio system active to stop
 the popping sound that can occur when OS X puts the audio system to sleep.
