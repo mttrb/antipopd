@@ -49,7 +49,7 @@ Installation
 ============
 
 In order to have `antipopd` run as a daemon (run automatically) it is 
-necessary to configure `launchctl`.
+necessary to configure `launchctl`. In `Terminal` run the following commands:
 
 	sudo cp com.blendedcocoa.antipopd.plist /Library/LaunchDaemons
 	sudo cp antipopd /usr/local/bin
