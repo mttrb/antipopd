@@ -36,7 +36,7 @@ Configuration
 
 By default `antipopd` will run every ten seconds to keep the audio system 
 running. If you would like `antipopd` to only *speak* when the computer is 
-connected to a power source you can create a confuration file 
+connected to a power source you can create a configuration file 
 at `/usr/local/share/antipop/ac_only`.
 
 If the first byte of the configuration file is a `1` the audio system will 
