@@ -29,6 +29,8 @@ Build
 
     clang -framework AppKit -framework IOKit -arch i386 -arch x86_64 -o antipopd antipopd.m
 
+A built version (`i386` and `x86_64`) of `antipopd` is included in the repository.
+
 Configuration
 =============
 
