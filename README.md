@@ -1,7 +1,7 @@
 `antipopd`
-===
+==========
 
-Copyright (c) Matthew Robinson 2010 
+Copyright (c) Matthew Robinson 2010, 2018 
 
 Email: matt@blendedcocoa.com
 
@@ -23,8 +23,34 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/us
 
 
 Build
-===
+=====
 
 `antipopd` can be built in a terminal using the following command:
 
-    clang -framework CoreFoundation -framework Foundation -framework SystemConfiguration -framework AppKit -arch i386 -arch x86_64 -o antipopd antipopd.m
+    clang -framework AppKit -framework IOKit -arch i386 -arch x86_64 -o antipopd antipopd.m
+
+Configuration
+=============
+
+By default `antipopd` will run every ten seconds to keep the audio system 
+running. If you would like `antipopd` to only "speak" when the computer is 
+connected to a power source you can create a confuration file 
+at `/usr/local/share/antipop/ac_only`.
+
+If the first byte of the configuration file is a `1` the audio system will 
+only be kept alive when on AC power. 
+
+The configuration file is only read once when `antipopd` launches. Changing 
+the configuration file will not take effect until `antipopd` is restarted.
+
+Installation
+============
+
+In order to have `antipopd` run as a daemon (run automatically) it is 
+necessary to configure `launchctl`.
+
+	sudo cp com.blendedcocoa.antipopd.plist /Library/LaunchDaemons
+	sudo cp antipopd /usr/local/bin
+	sudo launchctl load -w /Library/LaunchDaemons/com.blendedcocoa.antipopd.plist
+
+You will need to provide your password to allow the installation.

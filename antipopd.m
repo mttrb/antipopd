@@ -1,6 +1,6 @@
 // antipopd
 //
-// Copyright (c) Matthew Robinson 2010 
+// Copyright (c) Matthew Robinson 2010, 2018
 // Email: matt@blendedcocoa.com
 //
 // See banner() below for a description of this program.
@@ -19,8 +19,8 @@ clang -framework CoreFoundation -framework Foundation -framework SystemConfigura
 
 #import <CoreFoundation/CoreFoundation.h>
 #import <Foundation/Foundation.h>
-#import <SystemConfiguration/SystemConfiguration.h>
 #import <AppKit/AppKit.h>
+#import <IOKit/ps/IOPowerSources.h>
 
 #import <unistd.h>
 
@@ -29,14 +29,12 @@ clang -framework CoreFoundation -framework Foundation -framework SystemConfigura
 #define POWER_SOURCE	CFSTR("Power Source State")
 #define	INTERVAL	10 // seconds
 
-static BOOL onACPower = YES;
-static BOOL runOnACOnly = YES;
-
+static BOOL runOnACOnly = NO;
 
 void banner() {
 	printf("antipopd\n\n");
 	
-	printf("Copyright (c) Matthew Robinson 2010\n"); 
+	printf("Copyright (c) Matthew Robinson 2010, 2018\n"); 
 	printf("Email: matt@blendedcocoa.com\n\n");
 	
 	printf("antipopd is a drop in replacement for Robert Tomsick's antipopd 1.0.2 bash\n");
@@ -58,43 +56,30 @@ void banner() {
 }
 
 
+NSSpeechSynthesizer *speech = nil;
+
 // Timer callback that actually speaks the space
 void speak(CFRunLoopTimerRef timer, void *info) {
-	if (onACPower) {
-		[(NSSpeechSynthesizer *)info startSpeakingString:@" "];
-	}
+    if (!speech) {
+        speech = [[NSSpeechSynthesizer alloc] initWithVoice:nil];
+    }
+    
+    // If we are only supposed to run on AC power
+    if (runOnACOnly) {
+        // and we don't have unlimited power remaining
+        if (IOPSGetTimeRemainingEstimate() != kIOPSTimeRemainingUnlimited) {
+            // then return without speaking
+            return;
+        }
+    }
+    
+    [speech startSpeakingString:@" "];
 }
-
-// Callback that is called when the Power Status changes
-void getPowerStatus(SCDynamicStoreRef store, CFArrayRef changedKeys, void *info) {
-
-	// Read the state of the Internal Battery
-	CFPropertyListRef value = SCDynamicStoreCopyValue(
-		store,
-		BATTERY_STATE
-	);
-	
-	// We should always get a dictionary but we'll check anyway 
-	if (CFGetTypeID(value) == CFDictionaryGetTypeID()) {
-
-		//Get the Power Source State
-		CFStringRef powerSourceState = CFDictionaryGetValue(value, POWER_SOURCE);
-		
-		if (CFStringCompare(powerSourceState, CFSTR("AC Power"), 0) == 0) {
-			onACPower = YES;
-		} else { 
-			onACPower = NO;
-		}
-	}
-
-	CFRelease(value);
-}
-
 
 // Check for the existance of the ac_only file, check the contents
 // and set runOnACOnly as appropriate
 void loadACOnlyConfig() {
-	// Try to open the ac_only config file
+    // Try to open the ac_only config file
 	int fd = open(ANTIPOPD_CONFIG, O_RDONLY);
 	
 	// If succesful look inside, otherwise proceed with runOnACOnly default
@@ -102,107 +87,47 @@ void loadACOnlyConfig() {
 		char    buffer;
 		
 		ssize_t result = read(fd, &buffer, 1);
-		
-		// runOnACOnly is YES, unless...	
-		runOnACOnly = YES;
-		
-		// ...the first byte of the file is 0
-		if (result == 1 && buffer == '0') {
-			runOnACOnly = NO;
+				
+		// ...the first byte of the file is 1
+		if (result == 1 && buffer == '1') {
+			runOnACOnly = YES;
 		}
 		
 		close(fd);
-	}	
+  }
 }
 
 int main(int argc, char *argv[]) {
-	if (argc >= 2) { // if we have any parameter show the banner
-		banner();
-		exit(EXIT_SUCCESS);
-	}
-	
-	SCDynamicStoreRef	store = NULL;
-	
-	// Put an AutoreleasePool in place in case NSSpeechSynthesizer expects it
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    loadACOnlyConfig();
 
-	loadACOnlyConfig();
+    // Put an AutoreleasePool in place in case NSSpeechSynthesizer expects it
+    @autoreleasepool {
+        if (argc >= 2) { // if we have any parameter show the banner
+            banner();
+            exit(EXIT_SUCCESS);
+        }
+        
+        CFRunLoopTimerContext context = {
+            0, NULL, NULL, NULL, NULL,
+        };
+        
+        CFRunLoopTimerRef timer = CFRunLoopTimerCreate(
+                                                       NULL,
+                                                       0,
+                                                       INTERVAL,
+                                                       0,
+                                                       0,
+                                                       speak,
+                                                       &context
+                                                       );
+        
+        CFRunLoopAddTimer(CFRunLoopGetCurrent(), timer, kCFRunLoopDefaultMode);
+        
+        CFRunLoopRun();
+    }
 
-	// If we only want to run on AC then create and install the callback in
-	// the runloop to monitor the battery state
-	if (runOnACOnly) {
-		store = SCDynamicStoreCreate(
-			NULL,
-			CFSTR("power"),
-			getPowerStatus,
-			NULL
-		);
+    // It is unlikely that we will ever get here
+    // as there is no way to exit the runloop
 
-		if (store) {
-			CFStringRef keys[] = {BATTERY_STATE};
-			CFArrayRef notificationKeys = CFArrayCreate(NULL, (void *)keys, 1, NULL);
-
-			// Call the callback manually to set the initial Power Status
-			getPowerStatus(store, notificationKeys, NULL);
-
-			if (SCDynamicStoreSetNotificationKeys(store, notificationKeys, NULL)) {
-				
-				CFRunLoopSourceRef runLoopSource = SCDynamicStoreCreateRunLoopSource(
-					NULL, store, 0
-				);
-
-				CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopDefaultMode);
-
-				CFRelease(runLoopSource);
-			} else {
-				// Something went wrong setting up the notifications,
-				// shutdown the SCDynamicStore and continue as if 
-				// runOnACOnly is NO
-
-				CFRelease(store);
-
-				runOnACOnly = NO;
-				onACPower = YES;
-			}
-		} else {
-			// Something went wrong connecting to the SCDynamicStore,
-			// continue as if runOnACOnly is NO
-
-			runOnACOnly = NO;
-			onACPower = YES;
-		}
-	}
-
-	NSSpeechSynthesizer *speech = [[NSSpeechSynthesizer alloc] initWithVoice:nil];
-
-	CFRunLoopTimerContext context = {
-		0, speech, NULL, NULL, NULL, 
-	};
-
-	CFRunLoopTimerRef timer = CFRunLoopTimerCreate(
-		NULL,
-		0,
-		INTERVAL,
-		0,
-		0,
-		speak,
-		&context
-	);
-
-	CFRunLoopAddTimer(CFRunLoopGetCurrent(), timer, kCFRunLoopDefaultMode);
-
-
-	CFRunLoopRun();
-
-
-	// It is unlikely that we will ever get here 
-	// as there is no way to exit the runloop
-
-	if (store) CFRelease(store);
-	[speech release]; 
-
-	[pool release];
-
-	return(EXIT_SUCCESS);
+	  return(EXIT_SUCCESS);
 }
-
