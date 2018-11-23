@@ -35,7 +35,7 @@ Configuration
 =============
 
 By default `antipopd` will run every ten seconds to keep the audio system 
-running. If you would like `antipopd` to only "speak" when the computer is 
+running. If you would like `antipopd` to only *speak* when the computer is 
 connected to a power source you can create a confuration file 
 at `/usr/local/share/antipop/ac_only`.
 
