@@ -11,9 +11,7 @@
 
 /*
 
-export MACOSX_DEPLOYMENT_TARGET=10.4
-clang -framework CoreFoundation -framework Foundation -framework SystemConfiguration 
-  -framework AppKit -arch i386 -arch x86_64 -o antipopd antipopd.m
+clang -framework AppKit -framework IOKit -arch i386 -arch x86_64 -o antipopd antipopd.m
 
 */
 
