@@ -27,7 +27,7 @@ Build
 
 `antipopd` can be built in a terminal using the following command:
 
-    clang -framework AppKit -framework IOKit -arch i386 -arch x86_64 -o antipopd antipopd.m
+    clang -framework AppKit -framework IOKit -framework CoreAudio -arch i386 -arch x86_64 -o antipopd antipopd.m
 
 A built version (`i386` and `x86_64`) of `antipopd` is included in the repository.
 
@@ -41,6 +41,10 @@ at `/usr/local/share/antipop/ac_only`.
 
 If the first byte of the configuration file is a `1` the audio system will 
 only be kept alive when on AC power. 
+
+If you want to allow `antipopd` to work only when the default output device is set to built-in 
+you can create a configuration file at `/usr/local/share/antipop/built_in_only` as described above. 
+This may be helpful when you have a bluetooth headset connected and don't want to drain it's battery.
 
 The configuration file is only read once when `antipopd` launches. Changing 
 the configuration file will not take effect until `antipopd` is restarted.
